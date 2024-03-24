@@ -11,6 +11,9 @@ import (
 
 func main() {
 
+	zizi := 1
+	_ = zizi
+
 	db, err := database.DbConnection()
 
 	if err != nil {
@@ -18,8 +21,8 @@ func main() {
 		return
 	}
 	defer db.Close()
-        
-        _, err = db.Exec(`
+
+	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS temp2 (
 		Heure TIMESTAMP NOT NULL,
 		Temperature FLOAT NOT NULL
