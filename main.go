@@ -2,6 +2,7 @@ package main
 
 import (
 	"Grafana/database"
+	"Grafana/modbus"
 	"fmt"
 	"math/rand"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 func main() {
 
+	go modbus.StartServer()
 	db, err := database.DbConnection()
 
 	if err != nil {
