@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  mariadb:
+    image: jorgenlarsen/mariadb10.3:rpi
+    container_name: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=1405
+    ports:
+      - "3306:3306"
+    networks:
+      - reseau
+
+  godata:
+    image: godata:latest
+    container_name: godata
+    depends_on:
+      - mariadb
+    links:
+      - mariadb
+    networks:
+      - reseau
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mariadb
+      - godata
+    links:
+      - mariadb
+    networks:
+      - reseau  
+    
+networks:
+  reseau:
+    driver: bridge

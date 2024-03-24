@@ -2,7 +2,6 @@ package main
 
 import (
 	"Grafana/database"
-	"Grafana/modbus"
 	"fmt"
 	"math/rand"
 	"time"
@@ -12,13 +11,6 @@ import (
 
 func main() {
 
-<<<<<<< HEAD
-	go modbus.StartServer()
-=======
-	zizi := 1
-	_ = zizi
-
->>>>>>> pi-code
 	db, err := database.DbConnection()
 
 	if err != nil {
@@ -27,15 +19,11 @@ func main() {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS temp2 (
-		Heure TIMESTAMP NOT NULL,
-		Temperature FLOAT NOT NULL
-	)`)
+CREATE TABLE temp2 (
+    Heure TIMESTAMP NOT NULL,
+    Temperature FLOAT NOT NULL
+);
 
-	if err != nil {
-		panic(err.Error())
-	}
 
 	for {
 		Heure1 := time.Now()
