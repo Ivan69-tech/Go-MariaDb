@@ -87,15 +87,10 @@ type exampleHandler struct {
 
 	// these are here to hold client-provided (written) values, for both coils and
 	// holding registers
-	coils       [100]bool
-	holdingReg1 uint16
-	holdingReg2 uint16
-
-	// this is a 16-bit signed integer
-	holdingReg3 int16
-
-	// this is a 32-bit unsigned integer
-	holdingReg4 uint32
+	coils     [100]bool
+	PCSState  uint16
+	PSetpoint uint16
+	QSetpoint uint16
 }
 
 // Coil handler method.
@@ -158,7 +153,7 @@ func (eh *exampleHandler) HandleDiscreteInputs(req *modbus.DiscreteInputsRequest
 // Holding register handler method.
 // This method gets called whenever a valid modbus request asking for a holding register
 // operation (either read or write) received by the server.
-func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) (res []uint16, err error) {
+func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) (res []interface{}, err error) {
 	var regAddr uint16
 
 	if req.UnitId != 1 {
@@ -181,43 +176,43 @@ func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReq
 		switch regAddr {
 		// expose the static, read-only value of 0xff00 in register 100
 		case 100:
-			res = append(res, 0xff00)
+			res = append(res, 20)
 
 		// expose holdingReg1 in register 101 (RW)
 		case 101:
 			if req.IsWrite {
-				eh.holdingReg1 = req.Args[i]
+				switch req.Args[i] {
+				case 0x1, 0x2, 0x3:
+					eh.PCSState = req.Args[i]
+				default:
+					err = modbus.ErrIllegalDataValue
+				}
 			}
-			res = append(res, eh.holdingReg1)
+			res = append(res, eh.PCSState)
 
 		// expose holdingReg2 in register 102 (RW)
 		case 102:
 			if req.IsWrite {
 				// only accept values 2 and 4
-				switch req.Args[i] {
-				case 2, 4:
-					eh.holdingReg2 = req.Args[i]
-
-					// make note of the change (e.g. for auditing purposes)
-					fmt.Printf("%s set reg#102 to %v\n", req.ClientAddr, eh.holdingReg2)
-				default:
-					// if the written value is neither 2 nor 4,
-					// return a modbus "illegal data value" to
-					// let the client know that the value is
-					// not acceptable.
+				if req.Args[i] > 0 && req.Args[i] < 100 {
+					eh.PSetpoint = req.Args[i]
+				} else {
 					err = modbus.ErrIllegalDataValue
-					return
 				}
 			}
-			res = append(res, eh.holdingReg2)
-
+			res = append(res, eh.PSetpoint)
 		// expose eh.holdingReg3 in register 103 (RW)
 		// note: eh.holdingReg3 is a signed 16-bit integer
 		case 103:
 			if req.IsWrite {
+				if req.Args[i] > 0 && req.Args[i] < 100 {
+					eh.QSetpoint = req.Args[i]
+				} else {
+					err = modbus.ErrIllegalDataValue
+				}
 				// cast the 16-bit unsigned integer passed by the server
 				// to a 16-bit signed integer when writing
-				eh.holdingReg3 = int16(req.Args[i])
+				eh.QSetpoint = int16(req.Args[i])
 			}
 			// cast the 16-bit signed integer from the handler to a 16-bit unsigned
 			// integer so that we can append it to `res`.

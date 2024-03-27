@@ -7,7 +7,7 @@ import (
 
 func DbConnection() (*sql.DB, error) {
 
-	dataSourceName := "root:1405@tcp(mariadb:3306)/"
+	dataSourceName := "root:malivajo@tcp(localhost:3306)/"
 
 	// Connexion à la base de données
 	db, err := sql.Open("mysql", dataSourceName)
@@ -22,7 +22,7 @@ func DbConnection() (*sql.DB, error) {
 	}
 	fmt.Println("Base de données créée avec succès.")
 
-	dataSourceName = "root:1405@tcp(mariadb:3306)/test"
+	dataSourceName = "root:malivajo@tcp(localhost:3306)/test"
 
 	db, err = sql.Open("mysql", dataSourceName)
 	if err != nil {
