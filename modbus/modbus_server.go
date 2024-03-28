@@ -90,7 +90,7 @@ type exampleHandler struct {
 	coils     [100]bool
 	PCSState  uint16
 	PSetpoint uint16
-	QSetpoint uint16
+	QSetpoint int16
 }
 
 // Coil handler method.
@@ -153,7 +153,7 @@ func (eh *exampleHandler) HandleDiscreteInputs(req *modbus.DiscreteInputsRequest
 // Holding register handler method.
 // This method gets called whenever a valid modbus request asking for a holding register
 // operation (either read or write) received by the server.
-func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) (res []interface{}, err error) {
+func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) (res []uint16, err error) {
 	var regAddr uint16
 
 	if req.UnitId != 1 {
@@ -205,8 +205,8 @@ func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReq
 		// note: eh.holdingReg3 is a signed 16-bit integer
 		case 103:
 			if req.IsWrite {
-				if req.Args[i] > 0 && req.Args[i] < 100 {
-					eh.QSetpoint = req.Args[i]
+				if int16(req.Args[i]) > -100 && int16(req.Args[i]) < 100 {
+					eh.QSetpoint = int16(req.Args[i])
 				} else {
 					err = modbus.ErrIllegalDataValue
 				}
@@ -216,27 +216,9 @@ func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReq
 			}
 			// cast the 16-bit signed integer from the handler to a 16-bit unsigned
 			// integer so that we can append it to `res`.
-			res = append(res, uint16(eh.holdingReg3))
+			res = append(res, uint16(eh.QSetpoint))
 
 		// expose the 16 most-significant bits of eh.holdingReg4 in register 200
-		case 200:
-			if req.IsWrite {
-				eh.holdingReg4 =
-					((uint32(req.Args[i])<<16)&0xffff0000 |
-						(eh.holdingReg4 & 0x0000ffff))
-			}
-			res = append(res, uint16((eh.holdingReg4>>16)&0x0000ffff))
-
-		// expose the 16 least-significant bits of eh.holdingReg4 in register 201
-		case 201:
-			if req.IsWrite {
-				eh.holdingReg4 =
-					(uint32(req.Args[i])&0x0000ffff |
-						(eh.holdingReg4 & 0xffff0000))
-			}
-			res = append(res, uint16(eh.holdingReg4&0x0000ffff))
-
-		// any other address is unknown
 		default:
 			err = modbus.ErrIllegalDataAddress
 			return
